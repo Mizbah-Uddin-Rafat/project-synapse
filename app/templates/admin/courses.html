@@ -1,0 +1,82 @@
+{% extends "shared/base.html" %}
+{% block title %}Manage Courses{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold mb-0"><i class="bi bi-collection me-2 text-accent"></i>Manage Courses</h3>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('admin.new_course') }}" class="btn btn-sm btn-primary synapse-btn">
+        <i class="bi bi-plus-circle me-1"></i>New Course
+      </a>
+      <a href="{{ url_for('admin.new_lesson') }}" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-plus me-1"></i>New Lesson
+      </a>
+      <a href="{{ url_for('admin.new_question') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-plus me-1"></i>New Question
+      </a>
+    </div>
+  </div>
+
+  {% for course in courses %}
+  <div class="synapse-card mb-4">
+    <div class="synapse-card-header">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-journal-bookmark text-accent"></i>
+        <span class="fw-bold">{{ course.title }}</span>
+        {% if course.category %}<span class="badge bg-primary-subtle text-primary">{{ course.category }}</span>{% endif %}
+      </div>
+      <span class="badge bg-{{ 'success' if course.difficulty == 'beginner' else ('warning' if course.difficulty == 'intermediate' else 'danger') }}-subtle text-{{ 'success' if course.difficulty == 'beginner' else ('warning' if course.difficulty == 'intermediate' else 'danger') }}">
+        {{ course.difficulty | title }}
+      </span>
+    </div>
+    <div class="synapse-card-body">
+      {% if course.description %}
+      <p class="text-muted small mb-3">{{ course.description }}</p>
+      {% endif %}
+      <div class="row g-2">
+        {% for lesson in course.lessons %}
+        <div class="col-md-6">
+          <div class="p-2 rounded d-flex align-items-center gap-2" style="background:var(--bg-card2); border:1px solid var(--border);">
+            <i class="bi bi-file-earmark-text text-accent flex-shrink-0"></i>
+            <div class="flex-grow-1 min-w-0">
+              <div class="small fw-semibold text-truncate">{{ lesson.title }}</div>
+              <div class="text-muted d-flex gap-2" style="font-size:0.7rem;">
+                <span>{{ lesson.topic_category or 'General' }}</span>
+                <span>·</span>
+                <span>{{ lesson.difficulty }}</span>
+                <span>·</span>
+                <span>Order: {{ lesson.order_index }}</span>
+              </div>
+            </div>
+            <div class="flex-shrink-0">
+              {% set quiz_count = lesson.quizzes.count() %}
+              <span class="badge bg-secondary-subtle text-secondary" style="font-size:0.65rem;">
+                {{ quiz_count }} quiz{% if quiz_count != 1 %}zes{% endif %}
+              </span>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+          <p class="text-muted small mb-0">
+            No lessons yet.
+            <a href="{{ url_for('admin.new_lesson') }}" class="text-accent">Add a lesson →</a>
+          </p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="synapse-card">
+    <div class="synapse-card-body text-center py-5">
+      <i class="bi bi-collection fs-1 text-muted mb-3 d-block"></i>
+      <h5 class="text-muted">No courses yet</h5>
+      <a href="{{ url_for('admin.new_course') }}" class="btn btn-primary synapse-btn mt-2">
+        <i class="bi bi-plus-circle me-2"></i>Create First Course
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "shared/base.html" %}
+{% block title %}{{ lesson.title }}{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb" style="font-size:0.8rem; background:transparent;">
+      <li class="breadcrumb-item"><a href="{{ url_for('student.courses') }}" class="text-accent text-decoration-none">Courses</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('student.courses') }}" class="text-accent text-decoration-none">{{ lesson.course.title if lesson.course else 'Course' }}</a></li>
+      <li class="breadcrumb-item active text-muted">{{ lesson.title }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+      <div class="synapse-card mb-4">
+        <div class="synapse-card-header">
+          <span><i class="bi bi-book-fill me-2 text-accent"></i>{{ lesson.title }}</span>
+          <div class="d-flex gap-2">
+            <span class="badge bg-primary-subtle text-primary">{{ lesson.topic_category or 'General' }}</span>
+            <span class="badge bg-{{ 'success' if lesson.difficulty == 'beginner' else ('warning' if lesson.difficulty == 'intermediate' else 'danger') }}-subtle text-{{ 'success' if lesson.difficulty == 'beginner' else ('warning' if lesson.difficulty == 'intermediate' else 'danger') }}">
+              {{ lesson.difficulty | title }}
+            </span>
+          </div>
+        </div>
+        <div class="synapse-card-body">
+          {% if lesson.video_url %}
+          <div class="ratio ratio-16x9 mb-4 rounded overflow-hidden">
+            <iframe src="{{ lesson.video_url }}" allowfullscreen style="border:none;"></iframe>
+          </div>
+          {% endif %}
+          <div class="lesson-content">
+            {% if lesson.content %}
+              {{ lesson.content | safe }}
+            {% else %}
+              <p class="text-muted">No content available for this lesson yet.</p>
+            {% endif %}
+          </div>
+        </div>
+        <div class="p-3 border-top d-flex gap-2 flex-wrap" style="border-color:var(--border) !important;">
+          <button class="btn btn-sm btn-outline-primary" onclick="getAISummary({{ lesson.id }})">
+            <i class="bi bi-robot me-1"></i>AI Summary
+          </button>
+          <button class="btn btn-sm btn-outline-success" onclick="markComplete({{ lesson.id }})">
+            <i class="bi bi-check-circle me-1"></i>Mark Complete
+          </button>
+        </div>
+        <div id="summaryBox" class="ai-response-box mx-3 mb-3 d-none">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-robot text-accent"></i>
+            <strong class="small">AI Summary</strong>
+            <div id="summaryLoading" class="spinner-border spinner-border-sm text-accent ms-2 d-none"></div>
+          </div>
+          <div id="summaryText" class="small"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <!-- Progress Card -->
+      <div class="synapse-card mb-3">
+        <div class="synapse-card-header"><span><i class="bi bi-bar-chart me-2"></i>Your Progress</span></div>
+        <div class="synapse-card-body">
+          <div class="d-flex justify-content-between mb-1">
+            <span class="small text-muted">Completion</span>
+            <span class="small fw-semibold">{{ progress.completion_percentage | int }}%</span>
+          </div>
+          <div class="kpi-bar mb-3">
+            <div class="kpi-bar-fill" style="width:{{ progress.completion_percentage }}%"></div>
+          </div>
+          <div class="d-flex justify-content-between mb-1">
+            <span class="small text-muted">Mastery Score</span>
+            <span class="small fw-semibold">{{ progress.mastery_score | int }}%</span>
+          </div>
+          <div class="kpi-bar">
+            <div class="kpi-bar-fill bg-success" style="width:{{ progress.mastery_score }}%"></div>
+          </div>
+          {% if progress.completed %}
+          <div class="mt-3 text-center">
+            <span class="badge bg-success-subtle text-success px-3 py-2">
+              <i class="bi bi-check-circle-fill me-1"></i>Completed
+            </span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quizzes Card -->
+      <div class="synapse-card mb-3">
+        <div class="synapse-card-header"><span><i class="bi bi-question-circle me-2"></i>Quizzes</span></div>
+        <div class="synapse-card-body">
+          {% for quiz in quizzes %}
+          <a href="{{ url_for('student.quiz', quiz_id=quiz.id) }}"
+             class="d-flex align-items-center gap-3 text-decoration-none p-2 rounded mb-2"
+             style="background:var(--bg-card2); border:1px solid var(--border);">
+            <div class="rounded-circle d-flex align-items-center justify-content-center"
+                 style="width:32px;height:32px;background:rgba(108,99,255,0.2);flex-shrink:0;">
+              <i class="bi bi-pencil-fill text-accent" style="font-size:0.75rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="small fw-semibold" style="color:#e8eaf6;">{{ quiz.title }}</div>
+              {% if quiz.description %}<div class="text-muted" style="font-size:0.7rem;">{{ quiz.description[:50] }}</div>{% endif %}
+            </div>
+            <i class="bi bi-chevron-right text-muted"></i>
+          </a>
+          {% else %}
+          <p class="text-muted small text-center py-3">No quizzes for this lesson.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- AI Tools Card -->
+      <div class="synapse-card">
+        <div class="synapse-card-header"><span><i class="bi bi-robot me-2 text-accent"></i>AI Tools</span></div>
+        <div class="synapse-card-body d-grid gap-2">
+          <button class="btn btn-sm btn-outline-primary" onclick="getAISummary({{ lesson.id }})">
+            <i class="bi bi-robot me-1"></i>AI Summary
+          </button>
+          <button class="btn btn-outline-warning btn-sm" onclick="getRevisionNotes('{{ lesson.course.title if lesson.course else lesson.title }}')">
+            <i class="bi bi-journal-text me-2"></i>Revision Notes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="revisionBox" class="d-none" style="display:none;">
+  <div class="container-fluid px-4 pb-4">
+    <div class="synapse-card">
+      <div class="synapse-card-header">
+        <span><i class="bi bi-journal-text me-2 text-accent"></i>AI Revision Notes</span>
+        <button class="btn btn-xs btn-outline-secondary" onclick="document.getElementById('revisionBox').classList.add('d-none')">Close</button>
+      </div>
+      <div class="synapse-card-body">
+        <div id="revisionText" class="small ai-response-box"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

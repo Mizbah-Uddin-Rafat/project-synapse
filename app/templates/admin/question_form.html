@@ -1,0 +1,106 @@
+{% extends "shared/base.html" %}
+{% block title %}New Question{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:750px;">
+  <div class="mb-4">
+    <a href="{{ url_for('admin.courses') }}" class="text-accent text-decoration-none small">
+      <i class="bi bi-arrow-left me-1"></i>Back to Courses
+    </a>
+    <h4 class="fw-bold mt-2">Add Quiz Question</h4>
+    <p class="text-muted small">Questions are multiple choice with 4 options.</p>
+  </div>
+  <div class="synapse-card">
+    <div class="synapse-card-body">
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        <div class="mb-3">
+          <label class="form-label">Quiz *</label>
+          <select name="quiz_id" class="form-select synapse-input" required>
+            <option value="">Select a quiz…</option>
+            {% for q in quizzes %}
+            <option value="{{ q.id }}">{{ q.title }} (Lesson: {{ q.lesson.title if q.lesson else 'Unknown' }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Question Text *</label>
+          <textarea name="question_text" class="form-control synapse-input" rows="3"
+                    required placeholder="Enter your question here…"></textarea>
+        </div>
+
+        <p class="small fw-semibold text-muted mb-2">ANSWER OPTIONS</p>
+        <div class="mb-2">
+          <label class="form-label d-flex align-items-center gap-2">
+            <span class="badge bg-primary-subtle text-primary px-2">A</span> Option A *
+          </label>
+          <input name="option_a" class="form-control synapse-input" required placeholder="First option">
+        </div>
+        <div class="mb-2">
+          <label class="form-label d-flex align-items-center gap-2">
+            <span class="badge bg-primary-subtle text-primary px-2">B</span> Option B *
+          </label>
+          <input name="option_b" class="form-control synapse-input" required placeholder="Second option">
+        </div>
+        <div class="mb-2">
+          <label class="form-label d-flex align-items-center gap-2">
+            <span class="badge bg-primary-subtle text-primary px-2">C</span> Option C *
+          </label>
+          <input name="option_c" class="form-control synapse-input" required placeholder="Third option">
+        </div>
+        <div class="mb-4">
+          <label class="form-label d-flex align-items-center gap-2">
+            <span class="badge bg-primary-subtle text-primary px-2">D</span> Option D *
+          </label>
+          <input name="option_d" class="form-control synapse-input" required placeholder="Fourth option">
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label">Correct Answer *</label>
+            <select name="correct_answer" class="form-select synapse-input" required>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Topic Tag</label>
+            <input name="topic_tag" class="form-control synapse-input" placeholder="e.g. Forces, Algebra">
+            <div class="form-text text-muted">For weak topic detection.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Difficulty</label>
+            <select name="difficulty" class="form-select synapse-input">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary synapse-btn flex-grow-1">
+            <i class="bi bi-plus-circle me-2"></i>Add Question
+          </button>
+          <button type="reset" class="btn btn-outline-secondary">Clear</button>
+          <a href="{{ url_for('admin.new_question') }}" class="btn btn-outline-primary">+ Another</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tips -->
+  <div class="synapse-card mt-3">
+    <div class="synapse-card-header"><span><i class="bi bi-lightbulb me-2 text-warning"></i>Tips</span></div>
+    <div class="synapse-card-body small text-muted">
+      <ul class="mb-0 ps-3">
+        <li>Add at least 5 questions per quiz for meaningful analytics.</li>
+        <li>Use consistent topic tags to enable weak topic detection.</li>
+        <li>Mix easy, medium, and hard questions for good discrimination.</li>
+        <li>The ML model uses topic tags to identify student knowledge gaps.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

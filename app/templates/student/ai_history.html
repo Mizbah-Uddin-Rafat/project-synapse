@@ -1,0 +1,94 @@
+{% extends "shared/base.html" %}
+{% block title %}AI Tutor History{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="fw-bold mb-1"><i class="bi bi-robot me-2 text-accent"></i>AI Tutor History</h3>
+      <p class="text-muted small mb-0">All your AI-generated explanations, summaries and revision notes</p>
+    </div>
+    <a href="{{ url_for('student.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>Dashboard
+    </a>
+  </div>
+
+  {% if responses %}
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="synapse-kpi-card text-center">
+        <div class="kpi-value text-accent">{{ responses | length }}</div>
+        <div class="kpi-label">Total Interactions</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="synapse-kpi-card text-center">
+        <div class="kpi-value">{{ responses | selectattr('response_type', 'equalto', 'explanation') | list | length }}</div>
+        <div class="kpi-label">Explanations</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="synapse-kpi-card text-center">
+        <div class="kpi-value">{{ responses | selectattr('response_type', 'equalto', 'summary') | list | length }}</div>
+        <div class="kpi-label">Summaries</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="synapse-kpi-card text-center">
+        <div class="kpi-value">{{ responses | map(attribute='tokens_used') | sum }}</div>
+        <div class="kpi-label">Tokens Used</div>
+      </div>
+    </div>
+  </div>
+
+  {% for r in responses %}
+  <div class="synapse-card mb-3">
+    <div class="synapse-card-header">
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge
+          {% if r.response_type == 'explanation' %}bg-primary-subtle text-primary
+          {% elif r.response_type == 'summary' %}bg-success-subtle text-success
+          {% elif r.response_type == 'quiz' %}bg-warning-subtle text-warning
+          {% else %}bg-info-subtle text-info{% endif %}">
+          <i class="bi {% if r.response_type == 'explanation' %}bi-lightbulb{% elif r.response_type == 'summary' %}bi-file-text{% elif r.response_type == 'quiz' %}bi-question-circle{% else %}bi-journal-text{% endif %} me-1"></i>
+          {{ r.response_type | title }}
+        </span>
+        {% if r.mastery_score %}
+        <span class="text-muted small">Mastery: {{ r.mastery_score | round(1) }}%</span>
+        {% endif %}
+      </div>
+      <span class="text-muted small">{{ r.timestamp.strftime('%d %b %Y at %H:%M') }}</span>
+    </div>
+    <div class="synapse-card-body">
+      {% if r.weak_topics %}
+      <div class="mb-2">
+        <span class="text-muted small me-2">Topics:</span>
+        {% for topic in r.weak_topics.split(',') %}
+        <span class="badge bg-secondary-subtle text-secondary me-1">{{ topic.strip() }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <div class="ai-response-box small">
+        {{ r.generated_response | replace('\n', '<br>') | safe }}
+      </div>
+      <div class="mt-2 text-muted" style="font-size:0.7rem;">
+        <i class="bi bi-cpu me-1"></i>{{ r.model_used }} &nbsp;·&nbsp;
+        <i class="bi bi-hash me-1"></i>{{ r.tokens_used }} tokens
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% else %}
+  <div class="synapse-card">
+    <div class="synapse-card-body text-center py-5">
+      <i class="bi bi-robot fs-1 text-muted mb-3 d-block"></i>
+      <h5 class="text-muted">No AI interactions yet</h5>
+      <p class="text-muted small">Use the AI Tutor on your dashboard to get personalised explanations.</p>
+      <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary synapse-btn mt-2">
+        <i class="bi bi-robot me-2"></i>Open AI Tutor
+      </a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "shared/base.html" %}
+{% block title %}New Lesson{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:750px;">
+  <div class="mb-4">
+    <a href="{{ url_for('admin.courses') }}" class="text-accent text-decoration-none small">
+      <i class="bi bi-arrow-left me-1"></i>Back to Courses
+    </a>
+    <h4 class="fw-bold mt-2">New Lesson</h4>
+    <p class="text-muted small">A quiz will be automatically created with the lesson.</p>
+  </div>
+  <div class="synapse-card">
+    <div class="synapse-card-body">
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        <div class="mb-3">
+          <label class="form-label">Course *</label>
+          <select name="course_id" class="form-select synapse-input" required>
+            <option value="">Select a course…</option>
+            {% for c in courses %}
+            <option value="{{ c.id }}">{{ c.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Lesson Title *</label>
+          <input name="title" class="form-control synapse-input" required placeholder="e.g. Newton's Laws of Motion">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Content</label>
+          <textarea name="content" class="form-control synapse-input" rows="8"
+                    placeholder="Enter lesson content here. You can use plain text or basic HTML tags like &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;strong&gt;…"></textarea>
+          <div class="form-text text-muted">Supports basic HTML. This content will be shown to students.</div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label class="form-label">Topic Category</label>
+            <input name="topic_category" class="form-control synapse-input" placeholder="e.g. Mechanics, Algebra">
+            <div class="form-text text-muted">Used by ML model for weak topic detection.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Difficulty</label>
+            <select name="difficulty" class="form-select synapse-input">
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Order Index</label>
+            <input name="order_index" type="number" class="form-control synapse-input" value="0" min="0">
+            <div class="form-text text-muted">Lower numbers appear first.</div>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Video URL (optional)</label>
+          <input name="video_url" class="form-control synapse-input" placeholder="https://www.youtube.com/embed/VIDEO_ID">
+          <div class="form-text text-muted">Use YouTube embed URLs (youtube.com/embed/...).</div>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary synapse-btn flex-grow-1">
+            <i class="bi bi-check-circle me-2"></i>Create Lesson
+          </button>
+          <a href="{{ url_for('admin.courses') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

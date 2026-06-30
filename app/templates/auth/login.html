@@ -1,0 +1,33 @@
+{% extends "shared/base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="text-center mb-4">
+      <div class="auth-logo mb-3"><i class="bi bi-cpu-fill"></i></div>
+      <h2 class="fw-bold mb-1">Project <span class="text-accent">Synapse</span></h2>
+      <p class="text-muted small">AI-Powered Personalised Learning Ecosystem</p>
+    </div>
+    <h5 class="mb-4 fw-semibold">Sign In</h5>
+    <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="mb-3">
+        {{ form.email.label(class="form-label") }}
+        {{ form.email(class="form-control synapse-input" + (" is-invalid" if form.email.errors else ""), placeholder="researcher@university.ac.uk") }}
+        {% for error in form.email.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="mb-4">
+        {{ form.password.label(class="form-label") }}
+        {{ form.password(class="form-control synapse-input" + (" is-invalid" if form.password.errors else ""), placeholder="••••••••") }}
+        {% for error in form.password.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+      </div>
+      <button type="submit" class="btn btn-primary w-100 synapse-btn mb-3">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+      </button>
+    </form>
+    <p class="text-center text-muted small mt-3">
+      No account? <a href="{{ url_for('auth.register') }}" class="text-accent text-decoration-none fw-semibold">Register here</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

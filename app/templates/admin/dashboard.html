@@ -1,0 +1,194 @@
+{% extends "shared/base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="fw-bold mb-1"><i class="bi bi-speedometer2 me-2 text-accent"></i>Research Dashboard</h3>
+      <p class="text-muted small mb-0">Platform-wide analytics and A/B experiment results</p>
+    </div>
+    <a href="{{ url_for('analytics.export_csv') }}" class="btn btn-sm btn-outline-success">
+      <i class="bi bi-download me-1"></i>Export CSV
+    </a>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-2">
+      <div class="synapse-kpi-card text-center h-100">
+        <div class="kpi-icon bg-primary-subtle text-primary mx-auto mb-2"><i class="bi bi-people-fill"></i></div>
+        <div class="kpi-value">{{ overview.total_students }}</div>
+        <div class="kpi-label">Students</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="synapse-kpi-card text-center h-100">
+        <div class="kpi-icon bg-success-subtle text-success mx-auto mb-2"><i class="bi bi-journal-bookmark"></i></div>
+        <div class="kpi-value">{{ overview.total_courses }}</div>
+        <div class="kpi-label">Courses</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="synapse-kpi-card text-center h-100">
+        <div class="kpi-icon bg-info-subtle text-info mx-auto mb-2"><i class="bi bi-question-circle"></i></div>
+        <div class="kpi-value">{{ overview.total_attempts }}</div>
+        <div class="kpi-label">Quiz Attempts</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="synapse-kpi-card text-center h-100">
+        <div class="kpi-icon bg-warning-subtle text-warning mx-auto mb-2"><i class="bi bi-graph-up"></i></div>
+        <div class="kpi-value">{{ overview.avg_platform_score }}%</div>
+        <div class="kpi-label">Avg Score</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="synapse-kpi-card text-center h-100">
+        <div class="kpi-icon bg-danger-subtle text-danger mx-auto mb-2"><i class="bi bi-exclamation-triangle"></i></div>
+        <div class="kpi-value text-danger">{{ overview.high_risk_count }}</div>
+        <div class="kpi-label">High Risk</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="synapse-kpi-card text-center h-100 d-flex flex-column justify-content-center">
+        <a href="{{ url_for('admin.new_course') }}" class="btn btn-sm btn-primary synapse-btn mb-2">+ Course</a>
+        <a href="{{ url_for('admin.new_lesson') }}" class="btn btn-sm btn-outline-primary">+ Lesson</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="synapse-card h-100">
+        <div class="synapse-card-header">
+          <span><i class="bi bi-flask me-2 text-accent"></i>A/B Experiment Comparison</span>
+          <span class="badge bg-primary-subtle text-primary">Control vs Experimental</span>
+        </div>
+        <div class="synapse-card-body">
+          <canvas id="abChart" height="140"></canvas>
+        </div>
+        <div class="px-3 pb-3">
+          <div class="row g-2 text-center">
+            <div class="col-6">
+              <div class="p-2 rounded" style="background:rgba(46,204,113,0.1); border:1px solid rgba(46,204,113,0.2);">
+                <div class="fw-bold" style="color:var(--success);">{{ ab_stats.control.count if ab_stats.control else 0 }}</div>
+                <div class="text-muted small">Control Group</div>
+                <div class="text-muted" style="font-size:0.7rem;">Avg: {{ ab_stats.control.avg_score if ab_stats.control else 0 }}%</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-2 rounded" style="background:rgba(108,99,255,0.1); border:1px solid rgba(108,99,255,0.2);">
+                <div class="fw-bold text-accent">{{ ab_stats.experimental.count if ab_stats.experimental else 0 }}</div>
+                <div class="text-muted small">Experimental Group</div>
+                <div class="text-muted" style="font-size:0.7rem;">Avg: {{ ab_stats.experimental.avg_score if ab_stats.experimental else 0 }}%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="synapse-card h-100">
+        <div class="synapse-card-header">
+          <span><i class="bi bi-activity me-2"></i>Engagement Trend (30 days)</span>
+        </div>
+        <div class="synapse-card-body">
+          <canvas id="engagementChart" height="140"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Students Table -->
+  <div class="synapse-card">
+    <div class="synapse-card-header">
+      <span><i class="bi bi-people me-2"></i>All Students</span>
+      <span class="badge bg-secondary-subtle text-secondary">{{ students | length }} total</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Group</th>
+            <th>Mastery</th>
+            <th>Avg Score</th>
+            <th>Engagement</th>
+            <th>Completion</th>
+            <th>Risk</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          <tr>
+            <td>
+              <div class="fw-semibold small">{{ s.name }}</div>
+              <div class="text-muted" style="font-size:0.7rem;">{{ s.email }}</div>
+            </td>
+            <td>
+              <span class="badge {% if s.group == 'experimental' %}badge-experimental{% else %}badge-control{% endif %}">
+                {{ s.group }}
+              </span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="kpi-bar flex-grow-1" style="height:6px;width:60px;">
+                  <div class="kpi-bar-fill" style="width:{{ s.mastery }}%;background:{{ '#2ecc71' if s.mastery >= 70 else ('#f39c12' if s.mastery >= 40 else '#e74c3c') }};"></div>
+                </div>
+                <span class="small">{{ s.mastery }}%</span>
+              </div>
+            </td>
+            <td class="small">{{ s.avg_score }}%</td>
+            <td class="small">{{ s.engagement }}%</td>
+            <td class="small">{{ s.completion }}%</td>
+            <td><span class="risk-{{ s.risk_level }}">{{ s.risk_level | title }}</span></td>
+            <td>
+              <a href="{{ url_for('admin.student_detail', student_id=s.id) }}" class="btn btn-xs btn-outline-primary">View</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" class="text-center text-muted py-4">No students registered yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+fetch('/analytics/admin/ab-test').then(r => r.json()).then(d => {
+  new Chart(document.getElementById('abChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Avg Score', 'Engagement', 'Completion'],
+      datasets: [
+        { label: 'Control', data: [d.control?.avg_score||0, d.control?.avg_engagement||0, d.control?.avg_completion||0],
+          backgroundColor: 'rgba(46,204,113,0.6)', borderColor: 'rgba(46,204,113,1)', borderWidth: 1 },
+        { label: 'Experimental', data: [d.experimental?.avg_score||0, d.experimental?.avg_engagement||0, d.experimental?.avg_completion||0],
+          backgroundColor: 'rgba(108,99,255,0.6)', borderColor: 'rgba(108,99,255,1)', borderWidth: 1 }
+      ]
+    },
+    options: { responsive: true, scales: { y: { min: 0, max: 100 } },
+      plugins: { legend: { labels: { color: '#c5cae9' } } } }
+  });
+}).catch(() => {});
+
+fetch('/analytics/admin/engagement-trend').then(r => r.json()).then(d => {
+  new Chart(document.getElementById('engagementChart'), {
+    type: 'line',
+    data: {
+      labels: d.map(x => x.date),
+      datasets: [{ label: 'Active Users', data: d.map(x => x.active_users),
+        borderColor: '#6c63ff', backgroundColor: 'rgba(108,99,255,0.1)', fill: true, tension: 0.4 }]
+    },
+    options: { responsive: true, plugins: { legend: { labels: { color: '#c5cae9' } } } }
+  });
+}).catch(() => {});
+</script>
+{% endblock %}

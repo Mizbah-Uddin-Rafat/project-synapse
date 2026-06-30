@@ -1,0 +1,89 @@
+{% extends "shared/base.html" %}
+{% block title %}Recommendations{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="fw-bold mb-1"><i class="bi bi-stars me-2 text-accent"></i>Your Recommendations</h3>
+      <p class="text-muted small mb-0">Personalised suggestions based on your learning performance</p>
+    </div>
+    <a href="{{ url_for('student.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>Dashboard
+    </a>
+  </div>
+
+  {% if recommendations %}
+  <!-- Filter tabs -->
+  <div class="mb-4 d-flex gap-2 flex-wrap">
+    <button class="btn btn-sm btn-primary filter-btn active" onclick="filterRecs('all', this)">All</button>
+    <button class="btn btn-sm btn-outline-secondary filter-btn" onclick="filterRecs('next_lesson', this)">Next Lesson</button>
+    <button class="btn btn-sm btn-outline-secondary filter-btn" onclick="filterRecs('revision', this)">Revision</button>
+    <button class="btn btn-sm btn-outline-secondary filter-btn" onclick="filterRecs('advanced', this)">Advanced</button>
+    <button class="btn btn-sm btn-outline-secondary filter-btn" onclick="filterRecs('practice', this)">Practice</button>
+  </div>
+
+  <div id="recList">
+    {% for rec in recommendations %}
+    <div class="synapse-card mb-3 rec-item" data-type="{{ rec.recommendation_type }}">
+      <div class="synapse-card-body">
+        <div class="d-flex align-items-start gap-3">
+          <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:44px;height:44px;
+               background:{% if rec.recommendation_type == 'next_lesson' %}rgba(108,99,255,0.2){% elif rec.recommendation_type == 'revision' %}rgba(243,156,18,0.2){% elif rec.recommendation_type == 'advanced' %}rgba(46,204,113,0.2){% elif rec.recommendation_type == 'easier' %}rgba(52,152,219,0.2){% else %}rgba(231,76,60,0.2){% endif %};">
+            <i class="bi {% if rec.recommendation_type == 'next_lesson' %}bi-arrow-right-circle{% elif rec.recommendation_type == 'revision' %}bi-arrow-repeat{% elif rec.recommendation_type == 'advanced' %}bi-arrow-up-circle{% elif rec.recommendation_type == 'easier' %}bi-arrow-down-circle{% else %}bi-pencil-square{% endif %}"
+               style="color:{% if rec.recommendation_type == 'next_lesson' %}var(--accent){% elif rec.recommendation_type == 'revision' %}var(--warning){% elif rec.recommendation_type == 'advanced' %}var(--success){% elif rec.recommendation_type == 'easier' %}#3498db{% else %}var(--danger){% endif %};"></i>
+          </div>
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="rec-type-badge {{ rec.recommendation_type }}">{{ rec.recommendation_type | replace('_',' ') | title }}</span>
+              {% if rec.mastery_at_time %}
+              <span class="text-muted" style="font-size:0.7rem;">Mastery at time: {{ rec.mastery_at_time | round(1) }}%</span>
+              {% endif %}
+            </div>
+            <h6 class="fw-bold mb-1">{{ rec.recommended_content }}</h6>
+            <p class="text-muted small mb-2">{{ rec.reason }}</p>
+            <span class="text-muted" style="font-size:0.7rem;">
+              <i class="bi bi-clock me-1"></i>{{ rec.created_at.strftime('%d %b %Y at %H:%M') }}
+            </span>
+          </div>
+          {% if rec.lesson_id %}
+          <a href="{{ url_for('student.lesson', lesson_id=rec.lesson_id) }}" class="btn btn-sm btn-primary flex-shrink-0">
+            Go <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="synapse-card">
+    <div class="synapse-card-body text-center py-5">
+      <i class="bi bi-stars fs-1 text-muted mb-3 d-block"></i>
+      <h5 class="text-muted">No recommendations yet</h5>
+      <p class="text-muted small">Complete a quiz to receive personalised AI recommendations.</p>
+      <a href="{{ url_for('student.courses') }}" class="btn btn-primary synapse-btn mt-2">
+        <i class="bi bi-play-circle me-2"></i>Start Learning
+      </a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterRecs(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.remove('btn-primary');
+    b.classList.add('btn-outline-secondary');
+  });
+  btn.classList.add('btn-primary');
+  btn.classList.remove('btn-outline-secondary');
+  document.querySelectorAll('.rec-item').forEach(item => {
+    item.style.display = (type === 'all' || item.dataset.type === type) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

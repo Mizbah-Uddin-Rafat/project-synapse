@@ -1,0 +1,47 @@
+{% extends "shared/base.html" %}
+{% block title %}Courses{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <h3 class="fw-bold mb-4"><i class="bi bi-journal-bookmark me-2 text-accent"></i>All Courses</h3>
+  <div class="row g-4">
+    {% for course in courses %}
+    <div class="col-md-6 col-lg-4">
+      <div class="synapse-card h-100">
+        <div class="synapse-card-header">
+          <span class="fw-bold">{{ course.title }}</span>
+          <span class="badge bg-{{ 'success' if course.difficulty == 'beginner' else ('warning' if course.difficulty == 'intermediate' else 'danger') }}-subtle text-{{ 'success' if course.difficulty == 'beginner' else ('warning' if course.difficulty == 'intermediate' else 'danger') }}">
+            {{ course.difficulty | title }}
+          </span>
+        </div>
+        <div class="synapse-card-body">
+          {% if course.category %}<span class="badge bg-primary-subtle text-primary mb-2">{{ course.category }}</span>{% endif %}
+          <p class="text-muted small mb-3">{{ course.description or 'No description available.' }}</p>
+          <hr style="border-color:var(--border);">
+          <p class="small fw-semibold mb-2 text-muted">LESSONS</p>
+          {% for lesson in course.lessons %}
+          <a href="{{ url_for('student.lesson', lesson_id=lesson.id) }}"
+             class="d-flex align-items-center gap-2 text-decoration-none mb-2 p-2 rounded"
+             style="background:var(--bg-card2); border:1px solid var(--border);">
+            <i class="bi bi-play-circle-fill text-accent"></i>
+            <span class="small flex-grow-1" style="color:#e8eaf6;">{{ lesson.title }}</span>
+            <span class="badge" style="background:rgba(108,99,255,0.2);color:var(--accent);font-size:0.65rem;">{{ lesson.difficulty }}</span>
+          </a>
+          {% else %}
+          <p class="text-muted small text-center py-2">No lessons yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+      <div class="synapse-card">
+        <div class="synapse-card-body text-center py-5">
+          <i class="bi bi-journal-x fs-1 text-muted mb-3 d-block"></i>
+          <p class="text-muted">No courses available yet. Ask your administrator to add content.</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

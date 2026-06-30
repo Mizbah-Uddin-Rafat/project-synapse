@@ -1,0 +1,149 @@
+{% extends "shared/base.html" %}
+{% block title %}{{ quiz.title }}{% endblock %}
+{% block content %}
+
+<!-- Hidden inputs so JS knows quiz ID and total questions -->
+<input type="hidden" id="quizId" value="{{ quiz.id }}">
+<input type="hidden" id="totalQuestions" value="{{ questions|length }}">
+
+<div class="container py-4" style="max-width:750px;">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">{{ quiz.title }}</h4>
+      <p class="text-muted small mb-0">
+        <i class="bi bi-list-ol me-1"></i>{{ questions|length }} questions
+        &nbsp;·&nbsp;
+        <i class="bi bi-arrow-repeat me-1"></i>Attempt #{{ attempt_number }}
+      </p>
+    </div>
+    <div class="synapse-kpi-card px-3 py-2 text-center" style="min-width:90px;">
+      <div class="kpi-value fs-4" id="timerDisplay">00:00</div>
+      <div class="kpi-label">Time</div>
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="mb-4">
+    <div class="d-flex justify-content-between small text-muted mb-1">
+      <span>Progress</span>
+      <span id="progressText">0 / {{ questions|length }} answered</span>
+    </div>
+    <div class="kpi-bar" style="height:8px;">
+      <div class="kpi-bar-fill" id="progressBar" style="width:0%;"></div>
+    </div>
+  </div>
+
+  <!-- Questions -->
+  <div id="quizForm">
+    {% for q in questions %}
+    <div class="synapse-card mb-3">
+      <div class="synapse-card-header">
+        <span class="small text-muted">Question {{ loop.index }} of {{ questions|length }}</span>
+        {% if q.topic_tag %}
+        <span class="badge bg-primary-subtle text-primary" style="font-size:0.65rem;">
+          {{ q.topic_tag }}
+        </span>
+        {% endif %}
+      </div>
+      <div class="synapse-card-body">
+        <p class="fw-semibold mb-3">{{ loop.index }}. {{ q.question_text }}</p>
+
+        <div class="quiz-option"
+             data-qid="{{ q.id }}"
+             data-opt="A"
+             onclick="selectOption(this)">
+          <strong class="me-2" style="color:var(--primary);">A.</strong>{{ q.option_a }}
+        </div>
+
+        <div class="quiz-option"
+             data-qid="{{ q.id }}"
+             data-opt="B"
+             onclick="selectOption(this)">
+          <strong class="me-2" style="color:var(--primary);">B.</strong>{{ q.option_b }}
+        </div>
+
+        <div class="quiz-option"
+             data-qid="{{ q.id }}"
+             data-opt="C"
+             onclick="selectOption(this)">
+          <strong class="me-2" style="color:var(--primary);">C.</strong>{{ q.option_c }}
+        </div>
+
+        <div class="quiz-option"
+             data-qid="{{ q.id }}"
+             data-opt="D"
+             onclick="selectOption(this)">
+          <strong class="me-2" style="color:var(--primary);">D.</strong>{{ q.option_d }}
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+
+    <!-- Submit Button -->
+    <div class="d-grid mt-4 mb-5">
+      <button type="button"
+              id="submitBtn"
+              class="btn btn-primary synapse-btn py-3"
+              onclick="submitQuiz()">
+        <i class="bi bi-check2-circle me-2"></i>Submit Quiz
+      </button>
+    </div>
+  </div>
+
+  <!-- Result Box — hidden until submitted -->
+  <div id="resultBox" class="d-none">
+    <div class="synapse-card">
+      <div class="synapse-card-body text-center py-5">
+        <div class="mb-3" id="resultIcon"></div>
+        <h2 class="fw-bold mb-1" id="resultScore"></h2>
+        <p class="text-muted mb-4"  id="resultDetail"></p>
+
+        <div class="row g-3 mb-4 justify-content-center">
+          <div class="col-4">
+            <div class="synapse-kpi-card text-center">
+              <div class="kpi-value text-success" id="correctCount">0</div>
+              <div class="kpi-label">Correct</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="synapse-kpi-card text-center">
+              <div class="kpi-value text-danger" id="wrongCount">0</div>
+              <div class="kpi-label">Wrong</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="synapse-kpi-card text-center">
+              <div class="kpi-value" id="timeCount">0</div>
+              <div class="kpi-label">Seconds</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="resultMessage" class="alert mb-4"></div>
+
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+          <a href="{{ url_for('student.dashboard') }}"
+             class="btn btn-primary synapse-btn">
+            <i class="bi bi-grid-1x2 me-2"></i>Dashboard
+          </a>
+          <a href="{{ url_for('student.recommendations') }}"
+             class="btn btn-outline-primary">
+            <i class="bi bi-stars me-2"></i>Recommendations
+          </a>
+          {% if quiz.lesson_id %}
+          <a href="{{ url_for('student.lesson', lesson_id=quiz.lesson_id) }}"
+             class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Lesson
+          </a>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

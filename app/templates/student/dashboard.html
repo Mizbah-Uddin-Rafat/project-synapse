@@ -1,0 +1,177 @@
+{% extends "shared/base.html" %}
+{% block title %}My Dashboard{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="fw-bold mb-1">Welcome back, {{ current_user.full_name.split()[0] }}</h3>
+      <p class="text-muted mb-0 small"><i class="bi bi-flask me-1"></i>{{ current_user.group_type | title }} Group</p>
+    </div>
+    <button class="btn btn-sm btn-outline-primary" onclick="requestAITutor()">
+      <i class="bi bi-robot me-1"></i>Ask AI Tutor
+    </button>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="synapse-kpi-card h-100">
+        <div class="kpi-icon bg-primary-subtle text-primary"><i class="bi bi-graph-up-arrow"></i></div>
+        <div class="kpi-value">{{ summary.mastery_score }}%</div>
+        <div class="kpi-label">Mastery Score</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:{{ summary.mastery_score }}%;background:{{ '#2ecc71' if summary.mastery_score >= 70 else ('#f39c12' if summary.mastery_score >= 40 else '#e74c3c') }}"></div></div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="synapse-kpi-card h-100">
+        <div class="kpi-icon bg-success-subtle text-success"><i class="bi bi-patch-check"></i></div>
+        <div class="kpi-value">{{ summary.completion_rate }}%</div>
+        <div class="kpi-label">Completion</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill bg-success" style="width:{{ summary.completion_rate }}%"></div></div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="synapse-kpi-card h-100">
+        <div class="kpi-icon bg-warning-subtle text-warning"><i class="bi bi-lightning-charge"></i></div>
+        <div class="kpi-value">{{ summary.engagement_score }}%</div>
+        <div class="kpi-label">Engagement</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill bg-warning" style="width:{{ summary.engagement_score }}%"></div></div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="synapse-kpi-card h-100">
+        <div class="kpi-icon bg-info-subtle text-info"><i class="bi bi-clock-history"></i></div>
+        <div class="kpi-value">{{ summary.total_time_minutes }}m</div>
+        <div class="kpi-label">Study Time</div>
+        <div class="kpi-sub">{{ summary.total_attempts }} attempts</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-8">
+      <div class="synapse-card h-100">
+        <div class="synapse-card-header"><span><i class="bi bi-graph-up me-2"></i>Quiz Score Progression</span></div>
+        <div class="synapse-card-body"><canvas id="progressChart" height="100"></canvas></div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="synapse-card h-100">
+        <div class="synapse-card-header"><span><i class="bi bi-diagram-3 me-2"></i>Topic Performance</span></div>
+        <div class="synapse-card-body d-flex align-items-center justify-content-center">
+          <canvas id="topicChart" width="260" height="260"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-5">
+      <div class="synapse-card h-100">
+        <div class="synapse-card-header"><span><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Weak Topics</span></div>
+        <div class="synapse-card-body">
+          {% if summary.weak_topics %}
+            {% for topic in summary.weak_topics %}
+            <div class="d-flex align-items-center justify-content-between mb-2 p-2 rounded" style="background:var(--bg-card2);">
+              <span class="small fw-medium">{{ topic }}</span>
+              <div class="d-flex gap-2">
+                <span class="badge bg-danger-subtle text-danger">Needs Work</span>
+                <button class="btn btn-xs btn-outline-primary" onclick="explainTopic('{{ topic }}')"><i class="bi bi-robot"></i></button>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted small text-center py-3"><i class="bi bi-trophy-fill text-warning me-2"></i>No weak topics yet!</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-7">
+      <div class="synapse-card h-100">
+        <div class="synapse-card-header">
+          <span><i class="bi bi-stars me-2 text-accent"></i>Recommendations</span>
+          <a href="{{ url_for('student.recommendations') }}" class="small text-accent">View all →</a>
+        </div>
+        <div class="synapse-card-body">
+          {% if recommendations %}
+            {% for rec in recommendations %}
+            <div class="recommendation-item mb-2 p-2">
+              <div class="d-flex align-items-start gap-2">
+                <span class="rec-type-badge {{ rec.recommendation_type }}">{{ rec.recommendation_type | replace('_',' ') | title }}</span>
+                <div class="flex-grow-1">
+                  <div class="small fw-semibold">{{ rec.recommended_content }}</div>
+                  <div class="text-muted" style="font-size:0.75rem;">{{ (rec.reason or '')[:80] }}{% if rec.reason and rec.reason|length > 80 %}…{% endif %}</div>
+                </div>
+                {% if rec.lesson_id %}<a href="{{ url_for('student.lesson', lesson_id=rec.lesson_id) }}" class="btn btn-xs btn-primary">Go</a>{% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted small text-center py-3">Complete a quiz to get recommendations.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="synapse-card">
+    <div class="synapse-card-header">
+      <span><i class="bi bi-journal-bookmark me-2"></i>Courses</span>
+      <a href="{{ url_for('student.courses') }}" class="small text-accent">All courses →</a>
+    </div>
+    <div class="synapse-card-body">
+      <div class="row g-3">
+        {% for course in courses %}
+        <div class="col-md-4">
+          <div class="course-card p-3">
+            <span class="badge bg-{{ 'success' if course.difficulty == 'beginner' else ('warning' if course.difficulty == 'intermediate' else 'danger') }}-subtle text-{{ 'success' if course.difficulty == 'beginner' else ('warning' if course.difficulty == 'intermediate' else 'danger') }} mb-2">{{ course.difficulty | title }}</span>
+            <h6 class="fw-bold mb-1">{{ course.title }}</h6>
+            <p class="text-muted small mb-2">{{ (course.description or '')[:80] }}…</p>
+            <a href="{{ url_for('student.courses') }}" class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-play-circle me-1"></i>Open</a>
+          </div>
+        </div>
+        {% else %}
+        <div class="col-12"><p class="text-muted small text-center py-3">No courses yet.</p></div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="aiModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content synapse-modal">
+      <div class="modal-header border-0">
+        <h5 class="modal-title"><i class="bi bi-robot me-2 text-accent"></i>AI Tutor</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label small">Topic to explain:</label>
+          <div class="input-group">
+            <input type="text" class="form-control synapse-input" id="aiTopicInput" placeholder="e.g. Newton's Laws, Photosynthesis…">
+            <button class="btn btn-primary" onclick="callAIExplain()"><i class="bi bi-send me-1"></i>Ask</button>
+          </div>
+        </div>
+        {% if summary.weak_topics %}
+        <div class="d-flex gap-2 mb-3 flex-wrap">
+          <span class="small text-muted">Quick:</span>
+          {% for topic in summary.weak_topics[:3] %}
+          <button class="btn btn-xs btn-outline-warning" onclick="document.getElementById('aiTopicInput').value='{{ topic }}'; callAIExplain();">{{ topic }}</button>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <div id="aiResponseBox" class="ai-response-box d-none">
+          <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-robot text-accent"></i><strong class="small">AI Response</strong></div>
+          <div id="aiResponseText" class="small"></div>
+        </div>
+        <div id="aiLoadingBox" class="d-none text-center py-3">
+          <div class="spinner-border spinner-border-sm text-accent me-2"></div>
+          <span class="small text-muted">Generating explanation…</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
