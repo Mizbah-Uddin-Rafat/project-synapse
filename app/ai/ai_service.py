@@ -18,18 +18,14 @@ _client = None
 def _get_client():
     global _client
     if _client is None:
-        api_key = os.getenv('OPENAI_API_KEY')
+        api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
-            raise RuntimeError('OPENAI_API_KEY not set in environment.')
-        base_url = os.getenv('OPENROUTER_BASE_URL', 'https://api.openai.com/v1')
+            raise RuntimeError("OPENAI_API_KEY not set")
+
         _client = OpenAI(
             api_key=api_key,
-            base_url=base_url,
-            default_headers={
-                "HTTP-Referer": "http://localhost:5000",
-                "X-Title": "Project Synapse",
-            },
         )
+
     return _client
 
 def _call_openai(system_prompt: str, user_prompt: str, max_tokens: int = 1000) -> tuple[str, int]:
