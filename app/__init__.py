@@ -5,7 +5,7 @@ An AI-Powered Personalised Learning Ecosystem
 """
 
 import os
-from flask import Flask, app
+from flask import Flask
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 from dotenv import load_dotenv
