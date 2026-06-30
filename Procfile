@@ -1,1 +1,1 @@
-gunicorn --chdir . run:app
+gunicorn wsgi:app
