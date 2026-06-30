@@ -23,6 +23,7 @@ def _get_client():
             raise RuntimeError("OPENAI_API_KEY not set")
 
         _client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
             api_key=api_key,
         )
 
